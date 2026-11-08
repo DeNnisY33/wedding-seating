@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>婚禮座位表</title>
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-title" content="座位表">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f1ea; --paper:#fbfaf6; --kraft:#e8e1d3; --ink:#3c3a36; --muted:#8a847a; --line:#d8d2c6; --line-strong:#b9b2a5;
+    --accent:#7f1d1d; --accent-soft:#f3e9e6; --sel:#efe6d2; --ok:#5f7a5a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;color:var(--ink);font-size:22px;line-height:1.5;background:var(--bg);
+    font-family:"Noto Sans TC","PingFang TC","Hiragino Sans","Microsoft JhengHei",sans-serif;font-weight:400;letter-spacing:.02em}
+  button,input,textarea{font-family:inherit;font-size:inherit;color:inherit;letter-spacing:inherit}
+  button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+  b,strong{font-weight:700}
+
+  header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 40px;padding:28px 36px 22px;background:var(--paper);border-bottom:1px solid var(--line)}
+  header h1{margin:0;font-size:32px;font-weight:500;letter-spacing:.18em}
+  header .sub{font-size:15px;color:var(--muted);letter-spacing:.3em;margin-top:4px}
+  .summary{display:flex;gap:0;border:1px solid var(--line)}
+  .stat{padding:6px 22px;text-align:center;min-width:96px;border-left:1px solid var(--line)}
+  .stat:first-child{border-left:none}
+  .stat b{display:block;font-size:30px;line-height:1.15;font-weight:500}
+  .stat span{font-size:15px;color:var(--muted);letter-spacing:.1em}
+  .status{margin-left:auto;font-size:16px;color:var(--muted);padding:6px 0}
+  .status.bad{color:var(--accent);font-weight:700}
+
+  .wrap{display:grid;grid-template-columns:460px 1fr;gap:28px;padding:28px 36px;align-items:start;max-width:1700px;margin:0 auto}
+  .left{display:flex;flex-direction:column;gap:24px;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow-y:auto;padding-right:6px;scrollbar-width:thin}
+  .right{display:flex;flex-direction:column;gap:20px;min-width:0}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:24px}
+  .card h2{display:flex;align-items:baseline;gap:12px;margin:0 0 18px;padding-bottom:12px;border-bottom:1px solid var(--line);font-size:24px;font-weight:500;letter-spacing:.12em}
+  .card h2 .no{font-size:16px;color:var(--muted);font-weight:400;letter-spacing:.1em}
+
+  .big-input{width:100%;height:66px;padding:0 18px;font-size:26px;border:1px solid var(--line-strong);border-radius:2px;background:#fff}
+  .big-input:focus{outline:none;border-color:var(--ink)}
+  .big-input::placeholder{color:#b5afa4}
+  .label{font-size:18px;color:var(--muted);margin:16px 0 8px;letter-spacing:.1em}
+  .groups{display:flex;flex-wrap:wrap;gap:8px}
+  .gbtn{min-height:56px;min-width:80px;padding:0 14px;border-radius:2px;border:1px solid var(--line-strong);background:#fff;color:var(--ink);font-weight:500;font-size:22px;position:relative}
+  .gbtn::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);margin-right:8px;vertical-align:2px}
+  #addGroups{flex-wrap:nowrap;gap:6px}
+  #addGroups .gbtn,.modal .groups .gbtn{flex:1;min-width:0;padding:0 2px;font-size:20px}
+  #addGroups .gbtn::before,.modal .groups .gbtn::before{display:block;margin:0 auto 2px}
+  .gbtn.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .stepper{display:flex;align-items:center;gap:10px}
+  .stepper button{width:60px;height:60px;border-radius:2px;border:1px solid var(--line-strong);background:#fff;font-size:30px;font-weight:400;line-height:1}
+  .stepper .num{min-width:60px;text-align:center;font-size:32px;font-weight:500}
+  .primary{width:100%;height:68px;margin-top:18px;border:none;border-radius:2px;background:var(--accent);color:#fff;font-size:24px;font-weight:500;letter-spacing:.2em}
+  .primary:active{opacity:.85}
+  .secondary{width:100%;height:60px;margin-top:10px;border-radius:2px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);font-size:21px;font-weight:500;letter-spacing:.1em}
+
+  .bulk-ta{width:100%;height:240px;font-size:23px;line-height:1.6;padding:12px 16px;border-radius:2px;border:1px solid var(--line-strong);resize:vertical;background:#fff}
+  .bulk-ta:focus{outline:none;border-color:var(--ink)}
+  .bulk-info{font-size:20px;margin-top:12px}
+  .bulk-info .dup{color:var(--accent);font-size:17px;display:block;margin-top:4px}
+
+  .listcard{display:flex;flex-direction:column}
+  .tabs{display:flex;margin-bottom:12px;border:1px solid var(--line-strong)}
+  .tab{flex:1;height:54px;border:none;background:#fff;font-size:21px;font-weight:500;color:var(--muted)}
+  .tab + .tab{border-left:1px solid var(--line-strong)}
+  .tab.on{background:var(--ink);color:#fff}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .chip{min-height:44px;padding:0 12px;border-radius:2px;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:18px}
+  .chip[style]::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:6px;vertical-align:2px}
+  .chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .search{height:56px;font-size:21px;margin-bottom:12px}
+  .hint{background:var(--sel);border-left:3px solid var(--accent);padding:10px 14px;margin-bottom:12px;font-size:19px}
+  .list{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+  .g{display:flex;align-items:center;gap:12px;min-height:70px;padding:8px 6px 8px 4px;border:none;border-bottom:1px solid var(--line);background:transparent;text-align:left;width:100%}
+  .g.picking{cursor:pointer}
+  .g.picking:hover{background:var(--sel)}
+  .tag{flex:none;display:flex;align-items:center;gap:6px;font-size:16px;color:var(--muted);min-width:70px}
+  .tag::before{content:"";width:12px;height:12px;border-radius:50%;background:var(--c);flex:none}
+  .gname{flex:1;font-size:25px;font-weight:500;word-break:break-all}
+  .gcount{font-size:18px;color:var(--muted);font-weight:400}
+  .seat{flex:none;font-size:17px;padding:2px 10px;border:1px solid var(--ok);color:var(--ok);white-space:nowrap;border-radius:2px}
+  .seat.none{border-color:var(--line);color:var(--muted)}
+  .edit{flex:none;width:58px;height:50px;border-radius:2px;border:1px solid var(--line);background:#fff;font-size:17px;color:var(--muted)}
+  .empty{color:var(--muted);text-align:center;padding:28px 8px;font-size:20px}
+
+  .sel{position:sticky;top:16px;z-index:5;background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:18px 22px}
+  .sel.active{border:2px solid var(--accent);background:var(--paper)}
+  .sel-top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+  .sel-title{font-size:32px;font-weight:500;letter-spacing:.1em}
+  .sel-count{font-size:22px;padding:2px 14px;border:1px solid var(--ink);border-radius:2px}
+  .sel-count.over{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .sel-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .btn{min-height:52px;padding:0 18px;border-radius:2px;border:1px solid var(--line-strong);background:#fff;font-size:19px;font-weight:500}
+  .btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}
+  .btn.go{background:var(--accent);border-color:var(--accent);color:#fff}
+  .people{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .person{display:flex;align-items:center;gap:8px;padding:4px 4px 4px 12px;background:#fff;border:1px solid var(--line);border-radius:2px;font-size:22px;font-weight:500}
+  .person .tag{min-width:0}
+  .person button{height:42px;padding:0 12px;border-radius:2px;border:1px solid var(--line);background:var(--paper);color:var(--accent);font-size:17px}
+  .sel-empty{font-size:22px;color:var(--muted);letter-spacing:.06em}
+  .tolist{display:none}
+
+  .legend{display:flex;flex-wrap:wrap;gap:16px;font-size:17px;color:var(--muted);padding:0 4px}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--c);vertical-align:-1px;margin-right:6px}
+  .tables{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+  .table{position:relative;border:none;background:var(--paper);padding:12px 6px 14px;text-align:center;transition:background .12s,opacity .12s}
+  .table:hover{background:#fff}
+  .table svg{width:100%;max-width:160px;display:block;margin:0 auto}
+  .tname{font-size:19px;min-height:28px;color:var(--ink)}
+  .tables.has-sel .table:not(.on){opacity:.45}
+  .table.on{background:var(--sel);opacity:1;outline:3px solid var(--accent);outline-offset:-3px;z-index:2}
+  .table.on .tname{color:var(--accent);font-weight:700}
+  .table.on::after{content:"選取中";position:absolute;top:8px;left:8px;background:var(--accent);color:#fff;font-size:14px;padding:1px 8px;letter-spacing:.1em}
+  .table.full .tname{color:var(--ok)}
+  .table[data-tg]::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:var(--tc)}
+  .tg{font-size:16px;color:var(--muted);min-height:22px;margin-top:2px}
+  .tg i{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--tc);margin-right:5px;vertical-align:0}
+  .addtable{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:200px;border:none;background:var(--paper);color:var(--muted);font-size:20px}
+  .addtable span{font-size:46px;font-weight:300;line-height:1}
+  .addtable:hover{background:#fff;color:var(--ink)}
+  .tgrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .tgrow .lbl{font-size:18px;color:var(--muted);margin-right:4px}
+  .tgrow .gbtn{min-height:48px;min-width:0;font-size:19px;padding:0 12px}
+  .tgrow .gbtn.none::before{display:none}
+  .settings{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:center;font-size:19px;color:var(--muted)}
+  .settings .stepper button{width:50px;height:50px;font-size:24px}
+  .settings .stepper .num{font-size:24px;min-width:46px;color:var(--ink)}
+
+  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(16px);background:var(--ink);color:#fff;padding:14px 28px;border-radius:2px;font-size:22px;opacity:0;pointer-events:none;transition:all .2s;z-index:50;max-width:92vw;text-align:center;letter-spacing:.06em}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .modal-bg{position:fixed;inset:0;background:rgba(60,58,54,.45);display:none;align-items:center;justify-content:center;z-index:40;padding:16px}
+  .modal-bg.show{display:flex}
+  .modal{background:var(--paper);border-radius:4px;padding:28px;width:min(580px,100%);max-height:90vh;overflow:auto;border:1px solid var(--line)}
+  .modal h3{margin:0 0 14px;padding-bottom:12px;border-bottom:1px solid var(--line);font-size:26px;font-weight:500;letter-spacing:.12em}
+  .modal p{font-size:21px;margin:0 0 12px}
+  .modal .row{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+  .modal .row button{flex:1;min-width:120px;height:62px;border-radius:2px;font-size:22px;font-weight:500;border:1px solid var(--line-strong);background:#fff;letter-spacing:.1em}
+  .modal .row .go{background:var(--accent);border-color:var(--accent);color:#fff}
+  .modal .row .danger{border-color:var(--accent);color:var(--accent)}
+  .modal textarea{width:100%;height:260px;font-size:18px;padding:12px;border-radius:2px;border:1px solid var(--line-strong)}
+
+  .sheet-bg{position:fixed;inset:0;background:rgba(60,58,54,.4);z-index:30;display:none}
+  .sheet-bg.show{display:block}
+  .sheet{position:fixed;left:0;right:0;bottom:0;max-height:78vh;display:flex;flex-direction:column;background:var(--paper);
+    border-top:3px solid var(--accent);padding:14px 16px calc(16px + env(safe-area-inset-bottom))}
+  .sheet-head{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .sheet-title{font-size:26px;font-weight:500;letter-spacing:.08em}
+  .sheet-head .sel-count{font-size:19px}
+  .sheet-done{margin-left:auto;height:56px;padding:0 24px;border:none;border-radius:2px;background:var(--ink);color:#fff;font-size:21px;font-weight:500}
+  .sheet-tip{font-size:18px;color:var(--muted);margin-bottom:8px}
+  .sheet .chips{margin-bottom:6px}
+  .sheet-list{overflow-y:auto;display:flex;flex-direction:column;border-top:1px solid var(--line);-webkit-overflow-scrolling:touch}
+  .sheet-list .seat{border-color:var(--accent);color:var(--accent)}
+
+  @media (max-width:1000px){
+    html,body{font-size:20px}
+    header{padding:18px 16px 14px;align-items:center}
+    header h1{font-size:26px}
+    .stat{min-width:72px;padding:4px 12px}.stat b{font-size:24px}
+    .status{margin-left:0;width:100%}
+    .wrap{display:flex;flex-direction:column;padding:14px;gap:16px}
+    .left,.right{display:contents}
+    .addcard{order:1}.sel{order:2;top:8px}.legend{order:3}.tables{order:4}.settings{order:5}.listcard{order:6}
+    .tolist{display:inline-block}
+    .tables{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+  }
+</style>
+
+
+</head>
+<body>
+<header>
+  <div class="brand"><h1>婚禮座位表</h1><div class="sub">SEATING PLAN</div></div>
+  <div class="summary" id="summary"></div>
+  <div class="status" id="status">連線中…</div>
+</header>
+
+<div class="wrap">
+  <div class="left">
+    <section class="card addcard">
+      <h2><span class="no">01</span>新增賓客</h2>
+      <input id="nameInput" class="big-input" placeholder="輸入名字，例如：王伯伯" autocomplete="off" enterkeyhint="done">
+      <div class="label">是哪一方的客人？</div>
+      <div class="groups" id="addGroups"></div>
+      <div class="label">幾個人？</div>
+      <div class="stepper">
+        <button type="button" id="cntMinus" aria-label="減少">−</button>
+        <div class="num" id="cntNum">1</div>
+        <button type="button" id="cntPlus" aria-label="增加">+</button>
+        <span style="color:var(--muted);font-size:19px">（一家人可以一起算）</span>
+      </div>
+      <button class="primary" id="addBtn">＋ 加入名單</button>
+      <button class="secondary" id="bulkBtn">一次貼上很多人</button>
+    </section>
+
+    <section class="card listcard" id="listcard">
+      <h2><span class="no">02</span>賓客名單</h2>
+      <div class="tabs">
+        <button class="tab on" data-f="unseated" id="tabUnseated">還沒排座位</button>
+        <button class="tab" data-f="all" id="tabAll">全部</button>
+      </div>
+      <div class="chips" id="groupChips"></div>
+      <input id="search" class="big-input search" placeholder="🔍 找名字" autocomplete="off">
+      <div class="hint" id="listHint" hidden></div>
+      <div class="list" id="list"></div>
+    </section>
+  </div>
+
+  <div class="right">
+    <section class="sel" id="sel"></section>
+    <div class="legend" id="legend"></div>
+    <section class="tables" id="tables"></section>
+    <section class="card settings" id="settings">
+      <span>桌數</span>
+      <div class="stepper"><button id="tMinus">−</button><div class="num" id="tNum">24</div><button id="tPlus">+</button></div>
+      <span>每桌人數</span>
+      <div class="stepper"><button id="sMinus">−</button><div class="num" id="sNum">10</div><button id="sPlus">+</button></div>
+      <button class="btn" id="copyBtn" style="margin-left:auto">複製整份座位表</button>
+    </section>
+  </div>
+</div>
+
+<div class="sheet-bg" id="sheetBg"><div class="sheet" id="sheet">
+  <div class="sheet-head"><div class="sheet-title" id="sheetTitle"></div><div class="sel-count" id="sheetCount"></div><button class="sheet-done" id="sheetDone">完成</button></div>
+  <div class="sheet-tip">點名字，就會坐進這一桌（可以連續點）</div>
+  <div class="chips" id="sheetChips"></div>
+  <div class="sheet-list" id="sheetList"></div>
+</div></div>
+<div class="toast" id="toast"></div>
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const GROUPS = [
+  {id:'yang',    label:'楊',     color:'#46637f'},
+  {id:'hu',      label:'胡',     color:'#a8574c'},
+  {id:'yangdad', label:'楊爸',   color:'#5f7a52'},
+  {id:'yangmom', label:'楊媽',   color:'#b48a3c'},
+  {id:'hupm',    label:'胡爸媽', color:'#76608a'},
+];
+const G = Object.fromEntries(GROUPS.map(g=>[g.id,g]));
+const ALIAS = {hudad:'hupm', humom:'hupm'};
+const DEFAULTS = {tableCount:24, seats:10, names:{"1":"主桌"}, groups:{}};
+
+let db = null;
+let guests = new Map();
+let settings = structuredClone(DEFAULTS);
+let selected = 0;            // selected table number (0 = none)
+let addGroup = null;
+let addCount = 1;
+let filter = 'unseated';
+let groupFilter = 'all';
+let sheetOpen = false;
+let sheetGroup = 'all';
+const isPhone = () => window.matchMedia('(max-width:1000px)').matches;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cnt = g => Math.max(1, Number(g.count)||1);
+const grp = g => G[g.group] || {label:'?', color:'#888'};
+const tableName = n => (settings.names && settings.names[String(n)]) || '';
+const tableGroup = n => { const id=settings.groups && settings.groups[String(n)]; return id && G[id] ? G[id] : null; };
+
+/* ---------- toast & modal ---------- */
+let toastTimer;
+function toast(msg){
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+function closeModal(){ $('modalBg').classList.remove('show'); $('modal').innerHTML=''; }
+function openModal(html, onReady){
+  $('modal').innerHTML = html; $('modalBg').classList.add('show');
+  if(onReady) onReady($('modal'));
+}
+$('modalBg').addEventListener('click', e=>{ if(e.target.id==='modalBg') closeModal(); });
+function confirmBox(title, msg, okText, onOk, danger){
+  openModal(`<h3>${esc(title)}</h3><p>${esc(msg)}</p>
+    <div class="row"><button data-x>取消</button><button class="${danger?'danger':'go'}" data-ok>${esc(okText)}</button></div>`, m=>{
+    m.querySelector('[data-x]').onclick=closeModal;
+    m.querySelector('[data-ok]').onclick=()=>{ closeModal(); onOk(); };
+  });
+}
+
+/* ---------- data layer (Supabase) ---------- */
+const SB_URL='https://ounichnmgwytfeufvplr.supabase.co';
+const SB_KEY='sb_publishable_zZ4HX-kaS8yb8HENlMeuBQ_edSiPlep';
+let sb=null;
+function setStatus(kind){
+  const s=$('status'); s.classList.toggle('bad', kind==='bad');
+  s.textContent = {ok:'● 已同步，大家看到的是同一份', wait:'連線中…', slow:'連線不穩，正在重新連線…',
+    bad:'⚠ 連不上，請檢查網路'}[kind] || kind;
+}
+const fromRow = r => ({name:r.name, group:ALIAS[r.grp]||r.grp, count:r.cnt, table:r.tbl, created:Number(r.created)||0});
+function toRow(d){ const o={};
+  if('name' in d) o.name=d.name; if('group' in d) o.grp=d.group; if('count' in d) o.cnt=d.count;
+  if('table' in d) o.tbl=d.table; if('created' in d) o.created=d.created; return o; }
+function fail(e){ console.warn(e); toast('存檔失敗，請檢查網路再試一次'); loadAll(); }
+
+async function loadAll(){
+  if(!sb) return;
+  try{
+    const [g,st]=await Promise.all([
+      sb.from('guests').select('*'),
+      sb.from('settings').select('data').eq('id','main').maybeSingle()]);
+    if(g.error) throw g.error;
+    guests = new Map(g.data.map(r=>[r.id, fromRow(r)]));
+    if(st.data && st.data.data && !settingsDirty && !settingsSaving) settings={...structuredClone(DEFAULTS), ...st.data.data};
+    setStatus('ok'); render();
+  }catch(e){ console.warn(e); setStatus('bad'); }
+}
+async function addGuests(list){
+  const rows=list.map(d=>{ const id=crypto.randomUUID(); guests.set(id,d); return {id, ...toRow(d)}; });
+  render();
+  if(!sb) return;
+  const {error}=await sb.from('guests').insert(rows);
+  if(error) fail(error);
+}
+const addGuest = d => addGuests([d]);
+async function updateGuest(id, patch){
+  guests.set(id,{...guests.get(id),...patch}); render();
+  if(!sb) return;
+  const {error}=await sb.from('guests').update({...toRow(patch), updated_at:new Date().toISOString()}).eq('id',id);
+  if(error) fail(error);
+}
+async function deleteGuest(id){
+  guests.delete(id); render();
+  if(!sb) return;
+  const {error}=await sb.from('guests').delete().eq('id',id);
+  if(error) fail(error);
+}
+let settingsTimer=null, settingsSaving=false, settingsDirty=false;
+function saveSettings(patch){
+  settings = {...settings, ...patch}; render();
+  if(!sb) return;
+  settingsDirty=true; clearTimeout(settingsTimer); settingsTimer=setTimeout(flushSettings, 500);
+}
+async function flushSettings(){
+  if(settingsSaving){ settingsTimer=setTimeout(flushSettings,300); return; }
+  if(!settingsDirty) return;
+  settingsDirty=false; settingsSaving=true;
+  const {error}=await sb.from('settings').upsert({id:'main', data:JSON.parse(JSON.stringify(settings)), updated_at:new Date().toISOString()});
+  settingsSaving=false;
+  if(error) fail(error);
+}
+async function init(){
+  setStatus('wait'); render();
+  if(!window.supabase){ setStatus('bad'); return; }
+  sb = window.supabase.createClient(SB_URL, SB_KEY, {auth:{persistSession:false}});
+  await loadAll();
+  sb.channel('seating')
+    .on('postgres_changes',{event:'*',schema:'public',table:'guests'}, p=>{
+      if(p.eventType==='DELETE'){ if(p.old && p.old.id) guests.delete(p.old.id); }
+      else if(p.new && p.new.id) guests.set(p.new.id, fromRow(p.new));
+      render();
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'settings'}, p=>{
+      if(p.new && p.new.data && !settingsDirty && !settingsSaving){ settings={...structuredClone(DEFAULTS), ...p.new.data}; render(); }
+    })
+    .subscribe(status=>{
+      if(status==='SUBSCRIBED'){ setStatus('ok'); loadAll(); }
+      else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){ setStatus('slow'); }
+    });
+  // safety net: refresh when the page comes back and every 30 s
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') loadAll(); });
+  setInterval(()=>{ if(document.visibilityState==='visible' && !settingsDirty && !settingsSaving) loadAll(); }, 30000);
+}
+
+/* ---------- helpers ---------- */
+function sortedGuests(){
+  const order = Object.fromEntries(GROUPS.map((g,i)=>[g.id,i]));
+  return [...guests.entries()].sort((a,b)=>
+    ((order[a[1].group]??9)-(order[b[1].group]??9)) || ((a[1].created||0)-(b[1].created||0)));
+}
+function atTable(n){ return sortedGuests().filter(([,g])=>Number(g.table)===n); }
+function tableTotal(n){ return atTable(n).reduce((s,[,g])=>s+cnt(g),0); }
+
+/* ---------- render ---------- */
+function render(){
+  renderSummary(); renderAddGroups(); renderChips(); renderList(); renderSel(); renderTables(); renderLegend(); renderSettings(); renderSheet();
+}
+function renderSummary(){
+  let total=0, seated=0;
+  for(const g of guests.values()){ total+=cnt(g); if(Number(g.table)>0) seated+=cnt(g); }
+  $('summary').innerHTML = `<div class="stat"><b>${total}</b><span>總人數</span></div><div class="stat"><b>${seated}</b><span>已排座</span></div><div class="stat"><b>${total-seated}</b><span>未排</span></div>`;
+}
+function renderAddGroups(){
+  $('addGroups').innerHTML = GROUPS.map(g=>
+    `<button type="button" class="gbtn ${addGroup===g.id?'on':''}" style="--c:${g.color}" data-g="${g.id}">${g.label}</button>`).join('');
+  $('cntNum').textContent = addCount;
+}
+function renderChips(){
+  const counts = {}; let all=0;
+  for(const g of guests.values()){
+    if(filter==='unseated' && Number(g.table)>0) continue;
+    counts[g.group]=(counts[g.group]||0)+cnt(g); all+=cnt(g);
+  }
+  $('groupChips').innerHTML =
+    `<button class="chip ${groupFilter==='all'?'on':''}" data-gf="all">全部 ${all}</button>` +
+    GROUPS.map(g=>`<button class="chip ${groupFilter===g.id?'on':''}" style="--c:${g.color}" data-gf="${g.id}">${g.label} ${counts[g.id]||0}</button>`).join('');
+  $('tabUnseated').classList.toggle('on', filter==='unseated');
+  $('tabAll').classList.toggle('on', filter==='all');
+}
+function renderList(){
+  const q = $('search').value.trim();
+  const rows = sortedGuests().filter(([,g])=>
+    (filter==='all' || !(Number(g.table)>0)) &&
+    (groupFilter==='all' || g.group===groupFilter) &&
+    (!q || String(g.name).includes(q)));
+  const hint=$('listHint');
+  if(selected){ hint.hidden=false; hint.textContent=`點名字，就會坐進「第 ${selected} 桌」`; }
+  else { hint.hidden=true; }
+  if(!rows.length){
+    $('list').innerHTML = `<div class="empty">${guests.size===0?'還沒有賓客，請在上面輸入名字':(filter==='unseated'&&!q?'這一類都排好座位了':'找不到')}</div>`;
+    return;
+  }
+  $('list').innerHTML = rows.map(([id,g])=>{
+    const gr=grp(g), t=Number(g.table)||0;
+    return `<div class="g ${selected?'picking':''}" style="--c:${gr.color}" data-id="${id}" role="button" tabindex="0">
+      <span class="tag">${gr.label}</span>
+      <span class="gname">${esc(g.name)}${cnt(g)>1?` <span class="gcount">共${cnt(g)}人</span>`:''}</span>
+      <span class="seat ${t?'':'none'}">${t?`第${t}桌`:'未排'}</span>
+      <button class="edit" data-edit="${id}">修改</button>
+    </div>`;
+  }).join('');
+}
+function renderSel(){
+  const el=$('sel');
+  if(!selected){
+    el.classList.remove('active');
+    el.innerHTML = `<div class="sel-empty">先點一張圓桌，再點名單裡的名字。</div>`;
+    return;
+  }
+  el.classList.add('active');
+  const list=atTable(selected), total=list.reduce((s,[,g])=>s+cnt(g),0), nm=tableName(selected);
+  el.innerHTML = `<div class="sel-top">
+      <div class="sel-title">第 ${selected} 桌${nm?`・${esc(nm)}`:''}</div>
+      <div class="sel-count ${total>settings.seats?'over':''}">${total} / ${settings.seats} 人</div>
+      <div class="sel-actions">
+        <button class="btn go tolist" data-act="tolist" >＋ 加人到這桌</button>
+        <button class="btn" data-act="rename">改桌名</button>
+        <button class="btn dark" data-act="close">✕ 取消選取</button>
+      </div>
+    </div>
+    ${total>settings.seats?`<div style="color:var(--accent);margin-top:8px">⚠ 超過 ${total-settings.seats} 人了</div>`:''}
+    <div class="tgrow"><span class="lbl">這桌是：</span>${GROUPS.map(g=>`<button class="gbtn ${tableGroup(selected)&&tableGroup(selected).id===g.id?'on':''}" style="--c:${g.color}" data-tgset="${g.id}">${g.label}</button>`).join('')}<button class="gbtn none ${tableGroup(selected)?'':'on'}" data-tgset="">未定</button></div>
+    <div class="people">${list.length? list.map(([id,g])=>{const gr=grp(g);
+      return `<span class="person" style="--c:${gr.color}"><span class="tag">${gr.label}</span>${esc(g.name)}${cnt(g)>1?`×${cnt(g)}`:''}<button data-out="${id}">移出</button></span>`;}).join('')
+      : '<span style="color:var(--muted)">這桌還沒有人</span>'}</div>`;
+}
+function tableSVG(n){
+  const seats=settings.seats, list=atTable(n);
+  const colors=[]; list.forEach(([,g])=>{ for(let i=0;i<cnt(g);i++) colors.push(grp(g).color); });
+  const total=colors.length, R=49, cx=60, cy=60;
+  const on = n===selected, over=total>seats;
+  let chairs='';
+  for(let i=0;i<seats;i++){
+    const a=(-90+i*360/seats)*Math.PI/180, x=(cx+R*Math.cos(a)).toFixed(1), y=(cy+R*Math.sin(a)).toFixed(1);
+    chairs += colors[i] ? `<circle cx="${x}" cy="${y}" r="7.5" fill="${colors[i]}"/>`
+                        : `<circle cx="${x}" cy="${y}" r="6.5" fill="#fff" stroke="#b9b2a5" stroke-width="1.5"/>`;
+  }
+  return `<svg viewBox="0 0 120 120" aria-hidden="true">
+    ${chairs}
+    <circle cx="60" cy="60" r="36" fill="${on?'#fff':'#f1ece2'}" stroke="${on?'#7f1d1d':(over?'#7f1d1d':'#b9b2a5')}" stroke-width="${on?3:1.2}"/>
+    <text x="60" y="63" text-anchor="middle" font-size="28" font-weight="500" fill="${on?'#7f1d1d':'#3c3a36'}">${n}</text>
+    <text x="60" y="83" text-anchor="middle" font-size="13" fill="${over?'#7f1d1d':'#8a847a'}">${total} / ${seats}</text>
+  </svg>`;
+}
+function renderTables(){
+  const box=$('tables'); let html='';
+  for(let n=1;n<=settings.tableCount;n++){
+    const total=tableTotal(n), tg=tableGroup(n);
+    html += `<button class="table ${n===selected?'on':''} ${total>=settings.seats?'full':''}" data-t="${n}" ${tg?`data-tg="${tg.id}" style="--tc:${tg.color}"`:''} aria-label="第${n}桌">
+      ${tableSVG(n)}<div class="tname">${esc(tableName(n)) || `第 ${n} 桌`}</div>
+      <div class="tg">${tg?`<i></i>${tg.label}桌`:'未定'}</div></button>`;
+  }
+  html += `<button class="addtable" id="addTableTile"><span>＋</span>加一桌</button>`;
+  box.innerHTML = html;
+  box.classList.toggle('has-sel', !!selected);
+}
+function renderLegend(){ $('legend').innerHTML = GROUPS.map(g=>`<span><i style="--c:${g.color}"></i>${g.label}</span>`).join('') + '<span><i style="--c:#fff;border:1.5px solid #b9b2a5"></i>空位</span>'; }
+function openSheet(){ if(!selected) return; sheetOpen=true; $('sheetBg').classList.add('show'); document.body.style.overflow='hidden'; renderSheet(); }
+function closeSheet(){ sheetOpen=false; $('sheetBg').classList.remove('show'); document.body.style.overflow=''; }
+function renderSheet(){
+  if(!sheetOpen) return;
+  if(!selected){ closeSheet(); return; }
+  const total=tableTotal(selected), nm=tableName(selected);
+  $('sheetTitle').textContent = `第 ${selected} 桌${nm?'・'+nm:''}`;
+  $('sheetCount').textContent = `${total} / ${settings.seats} 人`;
+  $('sheetCount').classList.toggle('over', total>settings.seats);
+  const un = sortedGuests().filter(([,g])=>!(Number(g.table)>0));
+  const counts={}; un.forEach(([,g])=>counts[g.group]=(counts[g.group]||0)+cnt(g));
+  $('sheetChips').innerHTML = `<button class="chip ${sheetGroup==='all'?'on':''}" data-sg="all">全部 ${un.reduce((s,[,g])=>s+cnt(g),0)}</button>` +
+    GROUPS.map(g=>`<button class="chip ${sheetGroup===g.id?'on':''}" style="--c:${g.color}" data-sg="${g.id}">${g.label} ${counts[g.id]||0}</button>`).join('');
+  const rows = un.filter(([,g])=>sheetGroup==='all'||g.group===sheetGroup);
+  $('sheetList').innerHTML = rows.length ? rows.map(([id,g])=>{const gr=grp(g);
+    return `<div class="g picking" style="--c:${gr.color}" data-pick="${id}" role="button" tabindex="0">
+      <span class="tag">${gr.label}</span>
+      <span class="gname">${esc(g.name)}${cnt(g)>1?` <span class="gcount">共${cnt(g)}人</span>`:''}</span>
+      <span class="seat">＋ 坐這桌</span></div>`;}).join('')
+    : `<div class="empty">${un.length?'這一類都排好了':'所有人都排好座位了'}</div>`;
+}
+function assignToSelected(id){
+  const g=guests.get(id); if(!g||!selected) return;
+  if(Number(g.table)===selected){ toast(`${g.name} 已經在第 ${selected} 桌`); return; }
+  const after = tableTotal(selected)+cnt(g);
+  updateGuest(id,{table:selected});
+  toast(after>settings.seats ? `${g.name} → 第 ${selected} 桌（⚠ 超過 ${after-settings.seats} 人）` : `${g.name} → 第 ${selected} 桌`);
+}
+$('sheetDone').onclick=closeSheet;
+$('sheetBg').addEventListener('click', e=>{ if(e.target.id==='sheetBg') closeSheet(); });
+$('sheetChips').addEventListener('click', e=>{ const b=e.target.closest('[data-sg]'); if(!b) return; sheetGroup=b.dataset.sg; renderSheet(); });
+$('sheetList').addEventListener('click', e=>{ const r=e.target.closest('[data-pick]'); if(r) assignToSelected(r.dataset.pick); });
+function renderSettings(){ $('tNum').textContent=settings.tableCount; $('sNum').textContent=settings.seats; }
+
+/* ---------- actions ---------- */
+function doAdd(){
+  const name=$('nameInput').value.trim();
+  if(!name){ toast('請先輸入名字'); $('nameInput').focus(); return; }
+  if(!addGroup){ toast('請選擇是哪一方的客人'); return; }
+  const go=()=>{
+    addGuest({name, group:addGroup, count:addCount, table:0, created:Date.now()});
+    toast(`已加入：${name}`);
+    $('nameInput').value=''; addCount=1; renderAddGroups(); $('nameInput').focus();
+  };
+  const dup=[...guests.values()].some(g=>g.name===name);
+  if(dup) confirmBox('名字重複', `名單裡已經有「${name}」了，還要再加一個嗎？`, '還是要加', go);
+  else go();
+}
+$('addBtn').onclick=doAdd;
+
+/* ---------- bulk paste ---------- */
+function parseBulk(text){
+  const out=[]; const seen=new Set();
+  for(let raw of text.split(/[\n\r,，、;；\t]+/)){
+    let t=raw.replace(/^\s*(?:\d+\s*[\.、\)）]\s*|[-•*·]\s*)/,'').trim();
+    if(!t) continue;
+    let count=1;
+    const m=t.match(/^(.+?)(?:\s+|\s*[x×X*＊]\s*)(\d{1,2})\s*(?:人|位)?$/);
+    if(m && m[1].trim()){ t=m[1].trim(); count=Math.min(20,Math.max(1,Number(m[2]))); }
+    if(seen.has(t)) continue; seen.add(t);
+    out.push({name:t,count});
+  }
+  return out;
+}
+function openBulk(){
+  let bg = addGroup;
+  openModal(`<h3>一次貼上很多人</h3>
+    <p style="font-size:19px;color:var(--muted)">一行一個名字。如果一家有好幾個人，可以寫「王伯伯 3」。</p>
+    <textarea class="bulk-ta" id="bt" placeholder="張育安&#10;鄭均文&#10;林華毅 2"></textarea>
+    <div class="label">這些人是哪一方的客人？</div>
+    <div class="groups" id="bg"></div>
+    <div class="bulk-info" id="bi"></div>
+    <div class="row"><button data-x>取消</button><button class="go" data-ok>全部加入</button></div>`, m=>{
+    const ta=m.querySelector('#bt');
+    const existing=new Set([...guests.values()].map(g=>g.name));
+    const update=()=>{
+      m.querySelector('#bg').innerHTML=GROUPS.map(x=>`<button type="button" class="gbtn ${bg===x.id?'on':''}" style="--c:${x.color}" data-g="${x.id}">${x.label}</button>`).join('');
+      const list=parseBulk(ta.value), dups=list.filter(x=>existing.has(x.name)), fresh=list.length-dups.length;
+      const ppl=list.filter(x=>!existing.has(x.name)).reduce((s,x)=>s+x.count,0);
+      m.querySelector('#bi').innerHTML = list.length
+        ? `會加入 <b style="font-size:26px;color:var(--accent);font-weight:500">${fresh}</b> 筆（共 ${ppl} 人）` +
+          (dups.length?`<span class="dup">已經在名單裡、會跳過：${dups.map(x=>esc(x.name)).join('、')}</span>`:'')
+        : '<span style="color:var(--muted)">還沒有貼上名字</span>';
+      m.querySelector('[data-ok]').textContent = fresh ? `全部加入（${fresh}筆）` : '全部加入';
+    };
+    update(); ta.focus();
+    ta.addEventListener('input', update);
+    m.querySelector('#bg').onclick=e=>{ const b=e.target.closest('[data-g]'); if(b){ bg=b.dataset.g; update(); } };
+    m.querySelector('[data-x]').onclick=closeModal;
+    m.querySelector('[data-ok]').onclick=async()=>{
+      const list=parseBulk(ta.value).filter(x=>!existing.has(x.name));
+      if(!list.length){ toast('請先貼上名字'); return; }
+      if(!bg){ toast('請選擇是哪一方的客人'); return; }
+      closeModal(); addGroup=bg; renderAddGroups();
+      toast(`正在加入 ${list.length} 筆…`);
+      const base=Date.now();
+      await addGuests(list.map((x,i)=>({name:x.name, group:bg, count:x.count, table:0, created:base+i})));
+      toast(`已加入 ${list.length} 筆（${G[bg].label}）`);
+    };
+  });
+}
+$('bulkBtn').onclick=openBulk;
+$('nameInput').addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.isComposing){ e.preventDefault(); doAdd(); } });
+$('addGroups').addEventListener('click', e=>{ const b=e.target.closest('[data-g]'); if(!b) return; addGroup=b.dataset.g; renderAddGroups(); });
+$('cntMinus').onclick=()=>{ addCount=Math.max(1,addCount-1); renderAddGroups(); };
+$('cntPlus').onclick=()=>{ addCount=Math.min(20,addCount+1); renderAddGroups(); };
+
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{ filter=t.dataset.f; renderChips(); renderList(); });
+$('groupChips').addEventListener('click', e=>{ const b=e.target.closest('[data-gf]'); if(!b) return; groupFilter=b.dataset.gf; renderChips(); renderList(); });
+$('search').addEventListener('input', renderList);
+
+$('list').addEventListener('click', e=>{
+  const ed=e.target.closest('[data-edit]'); if(ed){ e.stopPropagation(); editGuest(ed.dataset.edit); return; }
+  const row=e.target.closest('[data-id]'); if(!row) return;
+  const id=row.dataset.id, g=guests.get(id); if(!g) return;
+  if(!selected){ toast('請先點一張圓桌'); return; }
+  assignToSelected(id);
+});
+
+$('tables').addEventListener('click', e=>{
+  if(e.target.closest('#addTableTile')){
+    if(settings.tableCount>=60) return;
+    saveSettings({tableCount:settings.tableCount+1}); toast(`已加到 ${settings.tableCount} 桌`); return;
+  }
+  const b=e.target.closest('[data-t]'); if(!b) return;
+  const n=Number(b.dataset.t);
+  selected = (selected===n) ? 0 : n;
+  if(selected){ const tg=tableGroup(selected); groupFilter = tg ? tg.id : 'all'; sheetGroup = groupFilter; }
+  render();
+  if(selected && isPhone()) openSheet();
+});
+
+$('sel').addEventListener('click', e=>{
+  const out=e.target.closest('[data-out]');
+  if(out){ const g=guests.get(out.dataset.out); updateGuest(out.dataset.out,{table:0}); if(g) toast(`${g.name} 已移出`); return; }
+  const ts=e.target.closest('[data-tgset]');
+  if(ts){ const groups={...(settings.groups||{})}; if(ts.dataset.tgset) groups[String(selected)]=ts.dataset.tgset; else delete groups[String(selected)];
+    saveSettings({groups}); toast(`第 ${selected} 桌：${ts.dataset.tgset?G[ts.dataset.tgset].label+'桌':'未定'}`); return; }
+  const act=e.target.closest('[data-act]'); if(!act) return;
+  if(act.dataset.act==='close'){ selected=0; render(); }
+  if(act.dataset.act==='tolist'){ openSheet(); }
+  if(act.dataset.act==='rename') renameTable(selected);
+});
+
+function renameTable(n){
+  openModal(`<h3>第 ${n} 桌的名字</h3>
+    <p style="color:var(--muted);font-size:19px">例如：主桌、楊家親戚、大學同學。不需要可以留白。</p>
+    <input class="big-input" id="rn" value="${esc(tableName(n))}" placeholder="（留白就顯示「第 ${n} 桌」）">
+    <div class="row"><button data-x>取消</button><button class="go" data-ok>儲存</button></div>`, m=>{
+    const inp=m.querySelector('#rn'); inp.focus();
+    const ok=()=>{ const names={...(settings.names||{})}; const v=inp.value.trim();
+      if(v) names[String(n)]=v; else delete names[String(n)];
+      closeModal(); saveSettings({names}); };
+    m.querySelector('[data-x]').onclick=closeModal;
+    m.querySelector('[data-ok]').onclick=ok;
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing) ok(); });
+  });
+}
+
+function editGuest(id){
+  const g=guests.get(id); if(!g) return;
+  let eg=g.group, ec=cnt(g);
+  const draw=m=>{
+    m.querySelector('#eg').innerHTML = GROUPS.map(x=>`<button type="button" class="gbtn ${eg===x.id?'on':''}" style="--c:${x.color}" data-g="${x.id}">${x.label}</button>`).join('');
+    m.querySelector('#ec').textContent=ec;
+  };
+  openModal(`<h3>修改賓客</h3>
+    <input class="big-input" id="en" value="${esc(g.name)}">
+    <div class="label">哪一方</div><div class="groups" id="eg"></div>
+    <div class="label">幾個人</div>
+    <div class="stepper"><button type="button" id="em">−</button><div class="num" id="ec"></div><button type="button" id="ep">+</button></div>
+    ${Number(g.table)>0?`<div class="label">目前在第 ${g.table} 桌</div><button class="btn" id="eout">從第 ${g.table} 桌移出</button>`:''}
+    <div class="row"><button class="danger" data-del>刪除這位</button><button data-x>取消</button><button class="go" data-ok>儲存</button></div>`, m=>{
+    draw(m);
+    m.querySelector('#eg').onclick=e=>{ const b=e.target.closest('[data-g]'); if(b){ eg=b.dataset.g; draw(m);} };
+    m.querySelector('#em').onclick=()=>{ ec=Math.max(1,ec-1); draw(m); };
+    m.querySelector('#ep').onclick=()=>{ ec=Math.min(20,ec+1); draw(m); };
+    const out=m.querySelector('#eout'); if(out) out.onclick=()=>{ closeModal(); updateGuest(id,{table:0}); toast(`${g.name} 已移出`); };
+    m.querySelector('[data-x]').onclick=closeModal;
+    m.querySelector('[data-ok]').onclick=()=>{
+      const name=m.querySelector('#en').value.trim(); if(!name){ toast('名字不能空白'); return; }
+      closeModal(); updateGuest(id,{name, group:eg, count:ec}); toast('已儲存');
+    };
+    m.querySelector('[data-del]').onclick=()=>{
+      closeModal();
+      confirmBox('確定刪除？', `要把「${g.name}」從名單刪掉嗎？`, '刪除', ()=>{ deleteGuest(id); toast(`已刪除：${g.name}`); }, true);
+    };
+  });
+}
+
+/* settings */
+$('tMinus').onclick=()=>{
+  const n=settings.tableCount; if(n<=1) return;
+  if(tableTotal(n)>0){ toast(`第 ${n} 桌還有人，請先移出`); return; }
+  if(selected===n) selected=0;
+  const groups={...(settings.groups||{})}; delete groups[String(n)];
+  const names={...(settings.names||{})}; delete names[String(n)];
+  saveSettings({tableCount:n-1, groups, names});
+};
+$('tPlus').onclick=()=>{ if(settings.tableCount<60) saveSettings({tableCount:settings.tableCount+1}); };
+$('sMinus').onclick=()=>{ if(settings.seats>4) saveSettings({seats:settings.seats-1}); };
+$('sPlus').onclick=()=>{ if(settings.seats<20) saveSettings({seats:settings.seats+1}); };
+
+$('copyBtn').onclick=async()=>{
+  const lines=[];
+  for(let n=1;n<=settings.tableCount;n++){
+    const list=atTable(n); if(!list.length) continue;
+    const total=list.reduce((s,[,g])=>s+cnt(g),0);
+    const tg=tableGroup(n);
+    lines.push(`第${n}桌${tableName(n)?`（${tableName(n)}）`:''}${tg?`［${tg.label}］`:''} ${total}人：` +
+      list.map(([,g])=>`${g.name}${cnt(g)>1?`×${cnt(g)}`:''}`).join('、'));
+  }
+  const un=sortedGuests().filter(([,g])=>!(Number(g.table)>0));
+  if(un.length) lines.push('', '未排座位：'+un.map(([,g])=>`${g.name}${cnt(g)>1?`×${cnt(g)}`:''}（${grp(g).label}）`).join('、'));
+  const text=lines.join('\n') || '（還沒有資料）';
+  try{ await navigator.clipboard.writeText(text); toast('已複製，可以貼到 LINE 或記事本'); }
+  catch(e){
+    openModal(`<h3>座位表</h3><p style="font-size:19px">請長按或全選後複製：</p><textarea readonly>${esc(text)}</textarea>
+      <div class="row"><button class="go" data-x>關閉</button></div>`, m=>{ m.querySelector('[data-x]').onclick=closeModal; m.querySelector('textarea').select(); });
+  }
+};
+
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeModal(); closeSheet(); } });
+init();
+</script>
+</body>
+</html>
